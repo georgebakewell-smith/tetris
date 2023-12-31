@@ -29,11 +29,29 @@ class Target:
             self.body[1][1] = -1
             self.body[2][0] = 0
             self.body[2][1] = -1
-    def update_map(self, map):
-        map.arr[self.y][self.x] = self.type_int
+    
+    def update_map_int(self, map, n):
+        map.arr[self.y][self.x] = n
         for i in range(3):
             if valid_pos(self, i, map) == 1:
-                map.arr[self.y + self.body[i][1]][self.x + self.body[i][0]] = self.type_int
+                map.arr[self.y + self.body[i][1]][self.x + self.body[i][0]] = n
+
+    def update_map(self, map):
+        self.update_map_int(map, self.type_int)
+
+    def next_blocks(self, map):
+        if map.arr[self.y + 1][self.x] != 0:
+            return 0
+        for i in range(1):
+            if map.arr[self.y + self.body[i][1] + 1][self.x + self.body[i][0]] != 0:
+                return 0
+        return 1
+        
+
+    def move_down(self, map):
+        if self.next_blocks(map) == 1:
+            self.update_map_int(map, 0)
+            self.y += 1
                             
 
 class Map:
@@ -41,9 +59,11 @@ class Map:
         self.num_cols = 10
         self.num_rows = 20
         self.arr = arr_2d(self.num_rows, self.num_cols)
+        self.arr[10][6] = 2
 
     def draw_blocks(self, screen):
         block_width = screen.get_width()/10
+        black = (0,0,0)
         red = (255,0,0)
         green = (0,255,0)
         blue = (0,0,255)
@@ -61,6 +81,7 @@ class Map:
         
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 1000
+clock = pygame.time.Clock()
 
 map = Map()
 target = Target()
@@ -73,6 +94,7 @@ map.draw_blocks(screen)
 
 run = True
 while run:
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -80,8 +102,14 @@ while run:
             # checking if key "A" was pressed
             if event.key == pygame.K_a:
                 target.update_map(map)
+    target.update_map(map)
+    screen.fill((0,0,0))
     map.draw_blocks(screen)
     pygame.display.update()
+    clock.tick(1)
+
+    if target.y < map.num_rows-1:
+        target.move_down(map)
 
 pygame.quit()
 
