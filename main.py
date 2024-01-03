@@ -115,10 +115,19 @@ class Map:
         self.arr[6][2] = 2
         self.arr[6][3] = 2
         self.arr[6][4] = 2
-        self.arr[7][5] = 3
         self.arr[6][7] = 2
         self.arr[6][8] = 2
         self.arr[6][9] = 2
+        self.arr[7][0] = 2
+        self.arr[7][1] = 2
+        self.arr[7][2] = 2
+        self.arr[7][3] = 2
+        self.arr[7][4] = 2
+        self.arr[8][5] = 3
+        self.arr[8][6] = 3
+        self.arr[7][7] = 2
+        self.arr[7][8] = 2
+        self.arr[7][9] = 2
         self.arr[19][0] = 3
         self.arr[19][5] = 2
         self.to_be_removed = [0 for i in range(self.num_rows)]
@@ -159,7 +168,12 @@ class Map:
         
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 1000
-clock = pygame.time.Clock()
+TIME_PER_FRAME = 1000
+time_previous_tick = 0
+clock_slow = pygame.time.Clock()
+clock_fast = pygame.time.Clock()
+score = 0
+print(score)
 
 map = Map()
 target = Target()
@@ -170,8 +184,11 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 map.draw_blocks(screen)
 
+
 run = True
 while run:
+
+    # Fast commands
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -182,19 +199,28 @@ while run:
                 target.move_left(map)
             if event.key == pygame.K_d:
                 target.move_right(map)
-    
-    target.update_map(map)
-    screen.fill((0,0,0))
-    map.draw_blocks(screen)
-    if target.check_finish(map) == 1:
-        target.update_map(map)
-        target.reset()
-        if map.check_rows():
-            map.remove_rows()
 
+    # Slow commands
+    
+    time_since_slow_tick = pygame.time.get_ticks() - time_previous_tick
+    if time_since_slow_tick >= TIME_PER_FRAME or time_since_slow_tick == 0:
+        time_previous_tick = pygame.time.get_ticks()
+        if target.check_finish(map) == 1:
+            target.update_map(map)
+            target.reset()
+            score += 1
+            print(score)
+            if map.check_rows():
+                map.remove_rows()
+
+        if target.y < map.num_rows - 1:  
+            target.move_down(map)
+
+    screen.fill((0,0,0))
+    target.update_map(map)
+    map.draw_blocks(screen)
     pygame.display.update()
-    clock.tick(1)
-    if target.y < map.num_rows - 1:     
-        target.move_down(map)
+    clock_fast.tick(60)
+    
 
 pygame.quit()
